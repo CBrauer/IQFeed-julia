@@ -129,9 +129,16 @@ function read_stream()
     display("Connecting to the IQFeed client.")
     if !socket_init()
         display("Client is not running, let's Start the IQFeed client.")
-        run(`iqconnect`)
+        try
+            arguments = "<your login argument go here"
+            run(`iqconnect`, arguments, true)
+        catch err
+            @error "Error starting iqconnect: $err"
+            return
+        end
+        display("Sleeping for 5 seconds.")
         sleep(5)
-        return
+        display("IQFeed client is now running.")
     end
 
     display("Send the protocol request.");
