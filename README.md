@@ -7,15 +7,16 @@
  Windows 11 Pro, version 22H2</br>
  Julia 1.8.5</br>
  Visual Studio Code 1.77.3
+ IQFeed version 6.2.0.25.
  
  ### Running iqfeed.jl
  
- 1. First, start your copy of the IQFeed Client. I am currently running version 6.2.0.25.
- 2. Load the iqfeed.jl source code into your version of Visual Studio Code and run it during market hours.</br>
-    You should also be able to run code file in the Julia REPL.
- 3. The script first connects to the IQFeed client.</br>
-    A single symbol is defined to be "AAPL".<br>
-    After the symbol is sent, the script downloads data until three Q-records for APPL are displayed.</br>
+ 1. Load the iqfeed.jl source code into your version of Visual Studio Code and run it during market hours.</br>
+    You should also be able to run code file in the Julia REPL.</br>
+ 2. The code starts the IQFeed Client, if it is not already running.<br>
+    But first you will have to edit your account number and password.</br>
+ 3. A single symbol is defined to be "AAPL".<br>
+    After the symbol is sent, the script downloads data until twenty Q-records for APPL are displayed.</br>
     The program then exits.
 
 ### Comments
