@@ -6,7 +6,7 @@
  
  Windows 11 Pro, version 22H2</br>
  Julia 1.8.5</br>
- Visual Studio Code 1.77.3
+ Visual Studio Code 1.77.3</br>
  IQFeed version 6.2.0.25.
  
  ### Running iqfeed.jl
