@@ -3,6 +3,8 @@ using Dates
 using TimeZones
 using REPL.Terminals
 using InteractiveUtils
+using DataFrames
+using ODBC
 
 function display(text::String)
     # Log.WriteLog(text)
@@ -10,6 +12,18 @@ function display(text::String)
     # println(sub_text)
     
     println(text)
+end
+
+function is_today_a_holiday()
+    dsn = "Driver={ODBC Driver 17 for SQL Server}; Server=BIGSUR; Database=Securities; Trusted_Connection=yes;"
+    conn = ODBC.Connection(dsn)
+    holidays = DBInterface.execute(conn, "SELECT Month, Day, Year FROM dbo.Holidays") |> DataFrame
+    holidays[!, :Date] = Date.(holidays.Year, holidays.Month, holidays.Day)
+    holidays.Date = Date.(holidays.Date)
+    # Define the date to check, 
+    todays_date = Date(now())
+    is_holiday = any(holidays.Date .== todays_date)
+    return is_holiday
 end
 
 function is__market_open()
@@ -20,13 +34,15 @@ function is__market_open()
         display("Today is $name_of_day.")
         return false
     end
+
     # 2. Check to see if today is a holiday.
-    # This list should be in a Dataframe so that we do not need to edit this code.
-    holidays = [Date(2023,5,2), Date(2023,6,19), Date(2023,7,4), Date(2023,9,4), Date(2023,11,23), Date(2023,12,25)]
-    if Date(now()) in holidays
+    # holidays = [Date(2023,5,2), Date(2023,6,19), Date(2023,7,4), Date(2023,9,4), Date(2023,11,23), Date(2023,12,25)]
+    # A Better way than hard coding is to get the holidays from the SQL Server table
+    if is_today_a_holiday()
         display("Today is a holiday. Go back to bed.")
         return false
     end
+
     # 3. Now check the time in New York City to see if the markets are open.
     ny_time = now(tz"America/New_York")
     if (Dates.hour(ny_time) > 9 || (Dates.hour(ny_time) == 9 && Dates.minute(ny_time) >= 30)) &&
@@ -117,6 +133,7 @@ function parse_record(text::String)
     #   Sym,     Last, Size,            Time, Total Volume,       Bid, Bid Size,      Ask, Ask Size,     Open,     High,     Low,     Close
     #   ----  --------  ----  ---------------  ------------   --------  --------  -------- ---------  --------  --------  -------- ---------
     # Q,AAPL, 167.2750,  100, 13:51:11.621788,   5,30547653,  167.2700,      100, 167.2800,      500, 165.1900, 167.4600, 165.1900, 163.7600,C,01,
+    # Note: The "C" at then end means "Last Qualified Trade"
     fields = split(text, ',')
     symbol = fields[2]
     last   = parse(Float64, fields[3])
@@ -125,20 +142,29 @@ function parse_record(text::String)
     display("symbol: $(symbol): shares: $(shares), price: $(last), time: $(time)")
 end
 
+function start_iqconnect()
+    display("Client is not running, let's start the IQFeed client.")
+    try
+        iqconnect_path = raw"C:\Program Files\DTN\IQFeed\IQConnect.exe"
+        product = "EQUIVOLUME_CHARTS"
+        version = "1.0"
+        login = "123456"
+        password = "Foobar"
+        open(`$iqconnect_path -product $product -version $version -login $login -password $password -autoconnect`)
+    catch err
+        @error "Error starting iqconnect: $err"
+        return
+    end
+    display("Sleeping for 5 seconds.")
+    sleep(5)
+    display("IQFeed client is now running.")
+end
+
 function read_stream()
     display("Connecting to the IQFeed client.")
     if !socket_init()
         display("Client is not running, let's start the IQFeed client.")
-        try
-            arguments = "<your login arguments go here>"
-            run(`iqconnect`, arguments, true)
-        catch err
-            @error "Error starting iqconnect: $err"
-            return
-        end
-        display("Sleeping for 5 seconds.")
-        sleep(5)
-        display("IQFeed client is now running.")
+        start_iqconnect()
     end
 
     display("Send the protocol request.");
@@ -151,7 +177,7 @@ function read_stream()
     display("Sent $(symbol)");
     n_Q_records = 0
 
-    while n_Q_records < 3
+    while n_Q_records < 20
         # display("Calling: get_data_from_iq_client");
         text = get_data_from_iq_client()
         if isempty(text) || text == "error"
@@ -180,7 +206,6 @@ function read_stream()
     display("read_stream, the market is closed")
 end
 
-
 if is__market_open()
     read_stream()
 else
@@ -188,8 +213,9 @@ else
     print("Do you still want to proceed (y/n):")
     key = read(stdin, Char)
     if key == 'y'
-        display("\nOK, let's connect to IQFeed.")
+        display("OK, let's launch the IQFeed client.")
+        start_iqconnect()
         read_stream()
     end
-    display("Done.")
+   display("Done.")
 end
