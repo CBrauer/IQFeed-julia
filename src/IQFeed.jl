@@ -35,10 +35,10 @@ function launch_iqconnect()
     println("launch_iqconnect: launching the IQFeed client.")
     try
         iqconnect_path = raw"C:\Program Files\DTN\IQFeed\IQConnect.exe"
-        product = "EQUIVOLUME_CHARTS"
+        product = "FUBAR"
         version = "1.0"
-        login = "187519"
-        password = "Foobar112357"
+        login = "123456"
+        password = "Foobar"
         open(`$iqconnect_path -product $product -version $version -login $login -password $password -autoconnect`)
     catch err
         @error "Error launching iqconnect: $err"
