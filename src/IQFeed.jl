@@ -35,7 +35,7 @@ function launch_iqconnect()
     println("launch_iqconnect: launching the IQFeed client.")
     try
         iqconnect_path = raw"C:\Program Files\DTN\IQFeed\IQConnect.exe"
-        product = "FUBAR"
+        product = "FOOBAR"
         version = "1.0"
         login = "123456"
         password = "Foobar"
